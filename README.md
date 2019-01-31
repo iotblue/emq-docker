@@ -11,7 +11,8 @@ You can build this docker image by yourself.
 ```bash
 git clone -b master https://github.com/emqtt/emq_docker.git
 cd emq_docker
-docker build -t emq:latest .
+docker build --no-cache -t hub.takasi.io/cervello/cervello-virtual-gateway:latest-RC .
+docker build --no-cache -t hub.local.cervello.io/cervello/cervello-virtual-gateway:latest .
 ```
 
 ### Run emqttd
@@ -22,7 +23,7 @@ Execute some command under this docker image
 
 For example
 
-``docker run --rm -ti --name emq -p 18083:18083 -p 1883:1883 emq:latest``
+``  ``
 
 The emqtt erlang broker runs as linux user `emqtt` in the docker container.
 
