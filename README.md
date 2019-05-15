@@ -4,27 +4,59 @@ TODO: ...
 
 *EMQ* (Erlang MQTT Broker) is a distributed, massively scalable, highly extensible MQTT messaging broker written in Erlang/OTP.
 
-Current docker image size: 37.1 MB
+Current docker image size: 47 MB
 
-### Get emqx
+### Build emqx from source
 
-You can build this docker image by yourself.
+1. Update docker configuration to enable docker manifest command and prepare qemu to build images other then x86_64
+    ```bash
+    ./docker.sh prepare
+    ```
+2. Build Docker image
+    ```bash
+    ./docker.sh build
+    ```
+3. Test the docker image with paho
+    ```bash
+    ./docker.sh test 
+    ```
+4. Tag Docker image
+    ```bash
+    ./docker.sh tag 
+    ```
+5. Save the docker image as a zip file
+   ```bash
+    ./docker.sh save 
+    ``` 
+6. Push Docker image
+   ```bash
+    docker login
+    ./docker.sh push
+    ./docker.sh manifest-list
+    docker logout
+    ```
+7. Clean up the compiled image
+    ```bash
+    ./docker.sh clear
+    ```
+
+### Get emqx from the docker hub
+
+You can pull the image on the [docker hub](https://hub.docker.com/r/emqx/emqx).
 
 ```bash
-git clone -b master https://github.com/emqx/emqx-docker.git
-cd emqx-docker
-docker build -t emqx:latest .
+docker pull emqx/emqx:latest
 ```
 
 ### Run emqx
 
 Execute some command under this docker image
 
-``docker run --rm -ti -v `pwd`:$(somewhere) emqx/$(image) $(somecommand)``
+``docker run --rm -ti -v `pwd`:$(somewhere) emqx/emqx:$(tag) $(somecommand)``
 
 For example
 
-``docker run --rm -ti --name emqx -p 18083:18083 -p 1883:1883 emqx:latest``
+``docker run --rm -ti --name emqx -p 18083:18083 -p 1883:1883 emqx/emqx:latest``
 
 The emqx broker runs as linux user `emqx` in the docker container.
 
@@ -65,7 +97,6 @@ These environment variables will ignore for configuration file.
 | EMQX_NAME                   | container name     | none                      | emqx node short name                   |
 | EMQX_HOST                   | container IP       | none                      | emqx node host, IP or FQDN             |
 | EMQX_WAIT_TIME              | 5                  | none                      | wait time in sec before timeout       |
-| EMQX_JOIN_CLUSTER           | none               | none                      | Initial cluster to join               |
 | EMQX_ADMIN_PASSWORD         | public             | none                      | emqx admin password                    |
 | PLATFORM_ETC_DIR            | /opt/emqx/etc      | {{ platform_etc_dir }}    | The etc directory                     |
 | PLATFORM_LOG_DIR            | /opt/emqx/log      | {{ platform_log_dir }}    | The log directory                     |
@@ -86,7 +117,7 @@ If set ``EMQX_NAME`` and ``EMQX_HOST``, and unset ``EMQX_NODE__NAME``, ``EMQX_NO
 
 For example, set mqtt tcp port to 1883
 
-``docker run --rm -ti --name emqx -e EMQX_LISTENER__TCP__EXTERNAL=1883 -p 18083:18083 -p 1883:1883 emqx:latest``
+``docker run --rm -ti --name emqx -e EMQX_LISTENER__TCP__EXTERNAL=1883 -p 18083:18083 -p 1883:1883 emqx/emqx:latest``
 
 #### EMQ Loaded Plugins Configuration
 
@@ -105,6 +136,7 @@ Default environment variable ``EMQX_LOADED_PLUGINS``, including
 # The default EMQX_LOADED_PLUGINS env
 EMQX_LOADED_PLUGINS="emqx_recon,emqx_retainer,emqx_management,emqx_dashboard"
 ```
+**When you need to customize the loaded plugin, ``emqx_management`` must be loaded in the first place.**
 
 For example, load ``emqx_auth_redis`` plugin, set it into ``EMQX_LOADED_PLUGINS`` and use any separator to separates it.
 
@@ -113,9 +145,9 @@ You can use comma, space or other separator that you want.
 All the plugin you defined in env ``EMQX_LOADED_PLUGINS`` will be loaded.
 
 ```bash
-EMQX_LOADED_PLUGINS="emqx_auth_redis,emqx_recon,emqx_retainer,emqx_dashboard"
-EMQX_LOADED_PLUGINS="emqx_auth_redis emqx_recon emqx_retainer emqx_dashboard"
-EMQX_LOADED_PLUGINS="emqx_auth_redis | emqx_recon | emqx_retainer | emqx_dashboard"
+EMQX_LOADED_PLUGINS="emqx_management,emqx_auth_redis,emqx_recon,emqx_retainer,emqx_dashboard"
+EMQX_LOADED_PLUGINS="emqx_management emqx_auth_redis emqx_recon emqx_retainer emqx_dashboard"
+EMQX_LOADED_PLUGINS="emqx_management | emqx_auth_redis | emqx_recon | emqx_retainer | emqx_dashboard"
 ```
 
 #### EMQ X Plugins Configuration
@@ -145,7 +177,7 @@ docker run --rm -ti --name emqx -p 18083:18083 -p 1883:1883 -p 4369:4369 \
     -e EMQX_AUTH__REDIS__SERVER="your.redis.server:6379" \
     -e EMQX_AUTH__REDIS__PASSWORD="password_for_redis" \
     -e EMQX_AUTH__REDIS__PASSWORD_HASH=plain \
-    emqx:latest
+    emqx/emqx:latest
 
 ```
 
@@ -164,7 +196,7 @@ docker run --rm -ti --name emqx -p 18083:18083 -p 1883:1883 -p 4369:4369 -p 6000
     -e EMQX_HOST="t.emqx.io" \
     -e EMQX_LISTENER__TCP__EXTERNAL=1883 \
     -e EMQX_JOIN_CLUSTER="emqx@t.emqx.io" \
-    emqx:latest
+    emqx/emqx:latest
 
 ```
 
@@ -192,7 +224,7 @@ docker run --rm -ti --name emqx -p 18083:18083 -p 1883:1883 -p 4369:4369 \
     --sysctl net.ipv4.tcp_wmem=1024 4096 16777216 \
     --sysctl net.ipv4.tcp_max_tw_buckets=1048576 \
     --sysctl net.ipv4.tcp_fin_timeout=15 \
-    emqx:latest
+    emqx/emqx:latest
 
 ```
 
@@ -200,5 +232,5 @@ docker run --rm -ti --name emqx -p 18083:18083 -p 1883:1883 -p 4369:4369 \
 
 ### Thanks
 
-@je-al https://github.com/emqx/emqx-docker/issues/2 The idea of variable names get mapped, dots get replaced by __.
-
++ [@je-al](https://github.com/emqx/emqx-docker/issues/2)
++ [@RaymondMouthaan](https://github.com/emqx/emqx-docker/pull/91)
