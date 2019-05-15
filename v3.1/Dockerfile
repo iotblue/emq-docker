@@ -22,7 +22,8 @@ ARG DEPLOY=cloud
 RUN git clone -b ${EMQX_DEPS_DEFAULT_VSN} https://github.com/emqx/emqx-rel.git /emqx_rel \
     && cd /emqx_rel \
     && make distclean \
-    && [[ ${DEPLOY} == "edge" ]] && make emqx_edge || make 
+    && git checkout relx \
+    && make
 
 FROM $RUN_FROM
 
@@ -39,7 +40,7 @@ LABEL org.label-schema.docker.dockerfile="Dockerfile" \
 
 ARG QEMU_ARCH=x86_64
 COPY docker-entrypoint.sh start.sh tmp/qemu-$QEMU_ARCH-stati* /usr/bin/
-COPY --from=builder /emqx_rel/_build/emqx*/rel/emqx /opt/emqx
+COPY --from=builder /emqx_rel/_rel/emqx /opt/emqx
 
 RUN ln -s /opt/emqx/bin/* /usr/local/bin/ 
 RUN apk add --no-cache ncurses-libs openssl
